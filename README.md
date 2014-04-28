@@ -16,4 +16,4 @@ Usage: macchanger [mac address] [device]
 Install
 ---
 
-`brew install https://raw.githubusercontent.com/acrogenesis/homebrew/macchanger/Library/Formula/macchanger.rb`
+`brew install macchanger`
