@@ -1,7 +1,25 @@
 #!/usr/bin/env ruby
 
-add = ARGV[0]
-device = ARGV[1]
+require 'optparse'
+options = {}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: macchanger [mac address] [device]"
+
+  opts.on("-r", "--random", "Set random mac address, macchanger -r en0") do |r|
+    options[:random] = r
+  end
+
+end.parse!
+
+if options[:random]
+  add = (1..6).map{"%0.2X"%rand(256)}.join(":")
+  device = ARGV[0] or raise "Device can't be blank"
+else
+  add = ARGV[0] or raise"Mac address can't be blank"
+  device = ARGV[1] or raise "Device can't be blank"
+end
+
 if add.match(/^([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])$/)
   if system("sudo ifconfig #{device} ether #{add}")
     puts "Succesfuly setup #{add} on #{device} device"
