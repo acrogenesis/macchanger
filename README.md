@@ -12,3 +12,8 @@ Usage: macchanger [mac address] [device]
     -c, --check                      Check mac address, macchanger -c en0
     
 ```
+
+Install
+---
+
+`brew install https://raw.githubusercontent.com/acrogenesis/homebrew/macchanger/Library/Formula/macchanger.rb`
