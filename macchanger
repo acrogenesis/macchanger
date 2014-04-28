@@ -10,20 +10,49 @@ OptionParser.new do |opts|
     options[:random] = r
   end
 
+  opts.on("-c", "--check", "Check mac address, macchanger -c en0") do |c|
+    options[:check] = c
+  end
+
 end.parse!
 
-if options[:random]
-  add = (1..6).map{"%0.2X"%rand(256)}.join(":")
-  device = ARGV[0] or raise "Device can't be blank"
-else
-  add = ARGV[0] or raise"Mac address can't be blank"
-  device = ARGV[1] or raise "Device can't be blank"
+class MacChanger
+
+  def self.check(device)
+    check = `ifconfig #{device} |grep ether`
+    check[7,17]
+  end
+
+  def self.generate
+    (1..6).map{"%0.2x"%rand(256)}.join(":")
+  end
+
+  def self.is_valid?(add)
+    add.match(/^([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])$/)
+  end
 end
 
-if add.match(/^([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])$/)
-  if system("sudo ifconfig #{device} ether #{add}")
-    puts "Succesfuly setup #{add} on #{device} device"
-  end
+if options[:check]
+  device = ARGV[0] or raise ArgumentError, "Device can't be blank"
+  puts "Your mac address is: #{MacChanger.check(device)}"
 else
-  puts "Mac address is incorrect"
+  if options[:random]
+    device = ARGV[0] or raise ArgumentError, "Device can't be blank"
+    add = MacChanger.generate
+  else
+    add = ARGV[0] or raise ArgumentError, "Mac address can't be blank"
+    device = ARGV[1] or raise ArgumentError, "Device can't be blank"
+  end
+
+  if MacChanger.is_valid? add
+    if system("sudo ifconfig #{device} ether #{add}")
+      if MacChanger.check(device) == add
+        puts "Succesfuly setup #{add} on #{device} device"
+      else
+        puts "Try another mac address"
+      end
+    end
+  else
+    puts "Mac address is incorrect"
+  end
 end
