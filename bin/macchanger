@@ -31,11 +31,13 @@ class MacChanger
     add.match(/^([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])$/)
   end
 
-  def self.set(add, device)
+  def self.set(add, device, random=false)
     if MacChanger.is_valid? add
       if system("sudo ifconfig #{device} ether #{add}")
         if MacChanger.check(device) == add
           puts "Succesfuly setup #{add} on #{device} device"
+        elsif random
+          MacChanger.set(MacChanger.generate,device,true)
         else
           puts "Try another mac address"
         end
@@ -52,9 +54,11 @@ if options[:check]
 else
   if options[:random]
     add = MacChanger.generate
+    random = true
   else
     add = ARGV[0] or raise ArgumentError, "Mac address can't be blank"
     device = ARGV[1] or raise ArgumentError, "Device can't be blank"
-    MacChanger.set(add,device)
+    random = false
   end
+  MacChanger.set(add,device,random)
 end
