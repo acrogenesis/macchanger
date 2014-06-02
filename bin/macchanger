@@ -30,29 +30,31 @@ class MacChanger
   def self.is_valid?(add)
     add.match(/^([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])$/)
   end
+
+  def self.set(add, device)
+    if MacChanger.is_valid? add
+      if system("sudo ifconfig #{device} ether #{add}")
+        if MacChanger.check(device) == add
+          puts "Succesfuly setup #{add} on #{device} device"
+        else
+          puts "Try another mac address"
+        end
+      end
+    else
+      raise ArgumentError, "Mac address is incorrect"
+    end
+  end
 end
 
+device = ARGV[0] or raise ArgumentError, "Device can't be blank"
 if options[:check]
-  device = ARGV[0] or raise ArgumentError, "Device can't be blank"
   puts "Your mac address is: #{MacChanger.check(device)}"
 else
   if options[:random]
-    device = ARGV[0] or raise ArgumentError, "Device can't be blank"
     add = MacChanger.generate
   else
     add = ARGV[0] or raise ArgumentError, "Mac address can't be blank"
     device = ARGV[1] or raise ArgumentError, "Device can't be blank"
-  end
-
-  if MacChanger.is_valid? add
-    if system("sudo ifconfig #{device} ether #{add}")
-      if MacChanger.check(device) == add
-        puts "Succesfuly setup #{add} on #{device} device"
-      else
-        puts "Try another mac address"
-      end
-    end
-  else
-    puts "Mac address is incorrect"
+    MacChanger.set(add,device)
   end
 end
