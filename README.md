@@ -18,7 +18,7 @@ Install
 
 1. Install brew (http://brew.sh/)
 2. `brew update`
-3. `brew install https://raw.githubusercontent.com/acrogenesis/homebrew/0e90e5210b32e146b9f4d27acaa5486e73d4d608/Library/Formula/macchanger.rb`
+3. `brew install https://raw.githubusercontent.com/acrogenesis/macchanger/master/bin/macchanger.rb`
 
 Contributing
 ---
