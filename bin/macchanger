@@ -4,60 +4,72 @@ require 'optparse'
 options = {}
 
 OptionParser.new do |opts|
-  opts.banner = 'Usage: macchanger [mac address] [device]'
+  opts.banner = 'Usage: macchanger [options] device'
 
-  opts.on('-r', '--random', 'Set random mac address, macchanger -r en0') do |r|
+  opts.on('-m', '--mac MAC', 'Set the MAC address, macchanger -m XX:XX:XX:XX:XX:XX en0') do |m|
+    options[:mac] = m
+    puts m
+  end
+
+  opts.on('-r', '--random', 'Set random MAC address, macchanger -r en0') do |r|
     options[:random] = r
   end
 
-  opts.on('-c', '--check', 'Check mac address, macchanger -c en0') do |c|
-    options[:check] = c
+  opts.on('-s', '--show', 'Show the MAC address, macchanger -s en0') do |s|
+    options[:show] = s
   end
 
 end.parse!
 
 class MacChanger
-  def self.check(device)
-    check = `ifconfig #{device} |grep ether`
-    check[7, 17]
+  def self.show(device)
+    show = `ifconfig #{device} |grep ether`
+    show[7, 17]
   end
 
   def self.generate
     (1..6).map { format('%0.2x', rand(256)) }.join(':')
   end
 
-  def self.valid?(add)
-    add.match(/^([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])$/)
+  def self.valid?(mac)
+    unless mac.match(/^([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])$/)
+      fail ArgumentError, 'Mac address is not valid'
+    end
   end
 
-  def self.set(add, device, random = false)
-    if MacChanger.valid? add
-      if system("sudo ifconfig #{device} ether #{add}")
-        if MacChanger.check(device) == add
-          puts "Succesfuly setup #{add} on #{device} device"
-        elsif random
-          MacChanger.set(MacChanger.generate, device, true)
-        else
-          puts 'Try another mac address'
-        end
-      end
+  def self.random(options)
+    options[:mac] = generate
+    if set(options)
+      puts "Succesfuly setup #{options[:mac]} on #{options[:device]} device"
     else
-      fail ArgumentError, 'Mac address is incorrect'
+      random(options)
+    end
+  end
+
+  def self.set(options)
+    if system("sudo ifconfig #{options[:device]} ether #{options[:mac]}")
+      show(options[:device]) == options[:mac]
+    end
+  end
+
+  def self.start(options)
+    if options[:random]
+      random(options)
+    else
+      if set(options)
+        puts "Succesfuly setup #{options[:mac]} on #{options[:device]} device"
+      else
+        puts 'Try another mac address'
+      end
     end
   end
 end
 
-device = ARGV[0] or fail ArgumentError, "Device can't be blank"
-if options[:check]
-  puts "Your mac address is: #{MacChanger.check(device)}"
+options[:device] = ARGV[0] or fail ArgumentError, "Device can't be blank"
+
+if options[:show]
+  puts "Your mac address is: #{MacChanger.show(options[:device])}"
 else
-  if options[:random]
-    add = MacChanger.generate
-    random = true
-  else
-    add = ARGV[0] or fail ArgumentError, "Mac address can't be blank"
-    device = ARGV[1] or fail ArgumentError, "Device can't be blank"
-    random = false
-  end
-  MacChanger.set(add, device, random)
+  MacChanger.valid?(options[:mac]) unless options[:random]
+  MacChanger.start(options)
 end
