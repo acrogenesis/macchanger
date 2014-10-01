@@ -19,7 +19,7 @@ Install
 
 1. Install brew (http://brew.sh/)
 2. `brew update`
-3. `brew install macchanger`
+3. `brew install https://raw.githubusercontent.com/acrogenesis/macchanger/master/bin/macchanger.rb`
 
 Contributing
 ---
@@ -30,3 +30,5 @@ Contributing
 4. Push to the branch `git push origin my_markup`
 5. Open a [Pull Request][1]
 6. Enjoy a refreshing `Insert Favorite Beverage` and wait
+
+[1]: https://github.com/acrogenesis/macchanger/pulls
