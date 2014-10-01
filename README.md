@@ -7,9 +7,10 @@ Usage
 ---
 
 ```
-Usage: macchanger [mac address] [device]
-    -r, --random                     Set random mac address, macchanger -r en0
-    -c, --check                      Check mac address, macchanger -c en0
+Usage: macchanger [options] device
+    -m, --mac MAC                    Set the MAC address, macchanger -m XX:XX:XX:XX:XX:XX en0
+    -r, --random                     Set random MAC address, macchanger -r en0
+    -s, --show                       Show the MAC address, macchanger -s en0
 
 ```
 
