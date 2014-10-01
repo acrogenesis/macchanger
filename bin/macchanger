@@ -2,9 +2,15 @@
 
 require 'optparse'
 options = {}
+VERSION = 1.0
 
 OptionParser.new do |opts|
   opts.banner = 'Usage: macchanger [options] device'
+
+  opts.on('-v', '--version', 'Displays MacChanger version') do
+    puts "Version: #{VERSION}"
+    exit
+  end
 
   opts.on('-m', '--mac MAC', 'Set the MAC address, macchanger -m XX:XX:XX:XX:XX:XX en0') do |m|
     options[:mac] = m
