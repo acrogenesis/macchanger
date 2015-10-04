@@ -1,6 +1,10 @@
 #!/usr/bin/env ruby
 
 require 'optparse'
+
+#InfectedDuck: just to remove that awkward error msg
+ARGV << '-h' if ARGV.empty?
+
 options = {}
 VERSION = 1.0
 
