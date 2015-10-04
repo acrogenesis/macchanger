@@ -2,9 +2,9 @@
 
 require 'optparse'
 options = {}
-VERSION = 1.0
+VERSION = 1.1
 
-OptionParser.new do |opts|
+optparse = OptionParser.new do |opts|
   opts.banner = 'Usage: macchanger [options] device'
 
   opts.on('-v', '--version', 'Displays MacChanger version') do
@@ -24,8 +24,7 @@ OptionParser.new do |opts|
   opts.on('-s', '--show', 'Show the MAC address, macchanger -s en0') do |s|
     options[:show] = s
   end
-
-end.parse!
+end
 
 class MacChanger
   def self.show(device)
@@ -39,7 +38,7 @@ class MacChanger
 
   def self.valid?(mac)
     unless mac.match(/^([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])$/)
-      fail ArgumentError, 'Mac address is not valid'
+      fail OptionParser::InvalidArgument, 'Mac address is not valid'
     end
   end
 
@@ -71,11 +70,18 @@ class MacChanger
   end
 end
 
-options[:device] = ARGV[0] or fail ArgumentError, "Device can't be blank"
+begin
+  optparse.parse!
+  options[:device] = ARGV[0] or fail OptionParser::MissingArgument, 'device'
 
-if options[:show]
-  puts "Your mac address is: #{MacChanger.show(options[:device])}"
-else
-  MacChanger.valid?(options[:mac]) unless options[:random]
-  MacChanger.start(options)
+  if options[:show]
+    puts "Your mac address is: #{MacChanger.show(options[:device])}"
+  else
+    fail OptionParser::InvalidOption, 'MAC address or random option' if options[:mac].nil? && options[:random].nil?
+    MacChanger.valid?(options[:mac]) unless options[:random]
+    MacChanger.start(options)
+  end
+rescue OptionParser::InvalidArgument, OptionParser::MissingArgument, OptionParser::InvalidOption => error
+  puts error
+  puts optparse
 end
