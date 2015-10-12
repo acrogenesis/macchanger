@@ -33,7 +33,8 @@ class MacChanger
   end
 
   def self.generate
-    (1..6).map { format('%0.2x', rand(256)) }.join(':')
+    # least significant bit of most significant octet has to be 0 to to be unicast
+    [format('%0.2x', rand(256) & ~1), (1..5).map { format('%0.2x', rand(256)) }].join(':')
   end
 
   def self.valid?(mac)
