@@ -46,7 +46,7 @@ class MacChanger
   def self.random(options)
     options[:mac] = generate
     if set(options)
-      puts "Succesfuly setup #{options[:mac]} on #{options[:device]} device"
+      puts "Successfully setup #{options[:mac]} on #{options[:device]} device"
     else
       random(options)
     end
@@ -63,7 +63,7 @@ class MacChanger
       random(options)
     else
       if set(options)
-        puts "Succesfuly setup #{options[:mac]} on #{options[:device]} device"
+        puts "Successfully setup #{options[:mac]} on #{options[:device]} device"
       else
         puts 'Try another mac address'
       end
