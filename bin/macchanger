@@ -13,7 +13,7 @@ optparse = OptionParser.new do |opts|
   end
 
   opts.on('-m', '--mac MAC', 'Set the MAC address, macchanger -m XX:XX:XX:XX:XX:XX en0') do |m|
-    options[:mac] = m
+    options[:mac] = m.downcase
     puts m
   end
 
