@@ -44,7 +44,7 @@ class MacChanger
   end
 
   def self.down?(device)
-    unless `ifconfig -d |grep -E '^#{device}'`.empty?
+    unless `ifconfig -d |grep -E '^#{device}:'`.empty?
       fail OptionParser::InvalidArgument, "Device #{device} is down"
     end
   end
