@@ -43,6 +43,12 @@ class MacChanger
     end
   end
 
+  def self.down?(device)
+    unless `ifconfig -d |grep -E '^#{device}:'`.empty?
+      fail OptionParser::InvalidArgument, "Device #{device} is down"
+    end
+  end
+
   def self.random(options)
     options[:mac] = generate
     if set(options)
@@ -74,6 +80,7 @@ end
 begin
   optparse.parse!
   options[:device] = ARGV[0] or fail OptionParser::MissingArgument, 'device'
+  MacChanger.down?(options[:device])
 
   if options[:show]
     puts "Your mac address is: #{MacChanger.show(options[:device])}"
