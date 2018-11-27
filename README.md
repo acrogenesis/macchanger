@@ -23,6 +23,17 @@ Install
 2. `brew update`
 3. `brew install acrogenesis/macchanger/macchanger`
 
+Run at boot
+---
+This script will run every time at boot and set random MAC address for `en0`
+Edit `macchanger.local.plist` to set different interface name.
+
+1. `sudo cp /usr/local/Cellar/macchanger/<tab>/macchanger.local.plist /Library/LaunchDaemons/`
+2. `sudo chown root:wheel /Library/LaunchDaemons/macchanger.local.plist`
+3. `sudo launchctl load -w /Library/LaunchDaemons/macchanger.local.plist`
+
+
+
 Contributing
 ---
 
