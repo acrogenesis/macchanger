@@ -2,7 +2,7 @@
 
 require 'optparse'
 options = {}
-VERSION = '1.3.3'
+VERSION = '1.4.0'
 
 optparse = OptionParser.new do |opts|
   opts.banner = 'Usage: macchanger [options] device'
@@ -59,8 +59,12 @@ class MacChanger
   end
 
   def self.set(options)
-    if system("sudo ifconfig #{options[:device]} ether #{options[:mac]}")
-      show(options[:device]) == options[:mac]
+    if system("sudo /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport #{options[:device]} -z")
+      if system("sudo ifconfig #{options[:device]} ether #{options[:mac]}")
+        show(options[:device]) == options[:mac]
+      end
+    else
+      puts "Can't desaccociate #{options[:device]} WiFi, manually disconnect it and try again"
     end
   end
 
