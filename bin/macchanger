@@ -2,7 +2,7 @@
 
 require 'optparse'
 options = {}
-VERSION = '1.4.0'
+VERSION = '1.4.1'
 
 optparse = OptionParser.new do |opts|
   opts.banner = 'Usage: macchanger [options] device'
@@ -28,7 +28,7 @@ end
 
 class MacChanger
   def self.show(device)
-    show = `ifconfig #{device} |grep ether`
+    show = `/sbin/ifconfig #{device} |grep ether`
     show[7, 17]
   end
 
@@ -44,7 +44,7 @@ class MacChanger
   end
 
   def self.down?(device)
-    unless `ifconfig -d |grep -E '^#{device}:'`.empty?
+    unless `/sbin/ifconfig -d |grep -E '^#{device}:'`.empty?
       fail OptionParser::InvalidArgument, "Device #{device} is down"
     end
   end
@@ -60,7 +60,7 @@ class MacChanger
 
   def self.set(options)
     if system("sudo /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport #{options[:device]} -z")
-      if system("sudo ifconfig #{options[:device]} ether #{options[:mac]}")
+      if system("sudo /sbin/ifconfig #{options[:device]} ether #{options[:mac]}")
         show(options[:device]) == options[:mac]
       end
     else
