@@ -2,7 +2,7 @@
 
 require 'optparse'
 options = {}
-VERSION = '1.4.1'
+VERSION = '1.6.0'
 
 optparse = OptionParser.new do |opts|
   opts.banner = 'Usage: macchanger [options] device'
@@ -24,12 +24,24 @@ optparse = OptionParser.new do |opts|
   opts.on('-s', '--show', 'Show the MAC address, macchanger -s en0') do |s|
     options[:show] = s
   end
+
+  opts.on('--enable-private', 'Enable private Wi-Fi addresses (macOS Sequoia+ feature)') do
+    options[:enable_private] = true
+  end
+
+  opts.on('--disable-private', 'Disable private Wi-Fi addresses (use real MAC)') do
+    options[:disable_private] = true
+  end
+
+  opts.on('--status', 'Show private Wi-Fi address status for all networks') do
+    options[:status] = true
+  end
 end
 
 class MacChanger
   def self.show(device)
     show = `/sbin/ifconfig #{device} |grep ether`
-    show[7, 17]
+    show[7, 17] if show
   end
 
   def self.generate
@@ -49,34 +61,130 @@ class MacChanger
     end
   end
 
-  def self.random(options)
-    options[:mac] = generate
-    if set(options)
-      puts "Successfully setup #{options[:mac]} on #{options[:device]} device"
+  def self.get_macos_version
+    version_output = `sw_vers -productVersion`.strip
+    major, minor = version_output.split('.').map(&:to_i)
+    return major, minor
+  end
+
+  def self.sequoia_or_later?
+    major, minor = get_macos_version
+    return major >= 15 || (major == 14 && minor >= 4)
+  end
+
+  def self.get_interface_type(device)
+    # Check if it's Wi-Fi interface
+    wifi_check = `networksetup -listallhardwareports | grep -A1 "Wi-Fi" | grep "#{device}"`
+    return "Wi-Fi" unless wifi_check.empty?
+
+    # Check if it's Ethernet
+    ethernet_check = `networksetup -listallhardwareports | grep -A1 "Ethernet" | grep "#{device}"`
+    return "Ethernet" unless ethernet_check.empty?
+
+    return "Unknown"
+  end
+
+
+
+  def self.change_mac_sequoia_method(device, mac)
+    interface_type = get_interface_type(device)
+
+    if interface_type == "Wi-Fi"
+      puts "INFO: Type of interface is #{interface_type}. Will disassociate from any network."
+
+      # Turn off Wi-Fi, turn back on, change MAC, detect hardware
+      system("sudo /usr/sbin/networksetup -setairportpower #{device} off")
+      sleep 2
+      system("sudo /usr/sbin/networksetup -setairportpower #{device} on")
+      sleep 2
+
+      puts "Setting MAC address to #{mac}..."
+      success = system("sudo /sbin/ifconfig #{device} ether #{mac}")
+
+      system("sudo /usr/sbin/networksetup -detectnewhardware")
+      sleep 2
+
+      if success
+        new_mac = show(device)
+        if new_mac && new_mac.strip == mac
+          return true
+        else
+          puts "Failed to set MAC address. Make sure you're running with sudo privileges."
+          return false
+        end
+      else
+        puts "Failed to set MAC address. Make sure you're running with sudo privileges."
+        return false
+      end
     else
-      random(options)
+      # For Ethernet interfaces, try direct change
+      puts "Setting MAC address to #{mac}..."
+      success = system("sudo /sbin/ifconfig #{device} ether #{mac}")
+
+      if success
+        new_mac = show(device)
+        if new_mac && new_mac.strip == mac
+          return true
+        else
+          puts "Failed to set MAC address. Make sure you're running with sudo privileges."
+          return false
+        end
+      else
+        puts "Failed to set MAC address. Make sure you're running with sudo privileges."
+        return false
+      end
     end
   end
 
-  def self.set(options)
-    if system("sudo /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport #{options[:device]} -z")
-      if system("sudo /sbin/ifconfig #{options[:device]} ether #{options[:mac]}")
-        show(options[:device]) == options[:mac]
+  def self.change_mac_legacy_method(device, mac)
+    interface_type = get_interface_type(device)
+    puts "INFO: Type of interface is #{interface_type}. Will disassociate from any network."
+
+    if interface_type == "Wi-Fi"
+      puts "WARNING: The airport command line tool is deprecated and will be removed in a future release."
+      puts "For diagnosing Wi-Fi related issues, use the Wireless Diagnostics app or wdutil command line tool."
+
+      # Try the old airport method first
+      system("sudo /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport #{device} -z")
+      sleep 2
+    end
+
+    puts "Setting MAC address to #{mac}..."
+    success = system("sudo /sbin/ifconfig #{device} ether #{mac}")
+
+    if success
+      new_mac = show(device)
+      if new_mac && new_mac.strip == mac
+        return true
+      else
+        puts "Failed to set MAC address. Make sure you're running with sudo privileges."
+        return false
       end
     else
-      puts "Can't desaccociate #{options[:device]} WiFi, manually disconnect it and try again"
+      puts "Failed to set MAC address. Make sure you're running with sudo privileges."
+      return false
     end
   end
 
   def self.start(options)
     if options[:random]
-      random(options)
+      options[:mac] = generate
+    end
+
+    # Use different methods based on macOS version
+    if sequoia_or_later?
+      success = change_mac_sequoia_method(options[:device], options[:mac])
     else
-      if set(options)
-        puts "Successfully setup #{options[:mac]} on #{options[:device]} device"
-      else
-        puts 'Try another mac address'
-      end
+      success = change_mac_legacy_method(options[:device], options[:mac])
+    end
+
+    unless success
+      puts "ERROR: This device / interface has no MAC address to set."
+      puts ""
+      puts "TROUBLESHOOTING TIPS:"
+      puts "1. Make sure you're running with sudo privileges"
+      puts "2. Try running the command again"
+      puts "3. Some MAC addresses may be rejected by the system"
     end
   end
 end
