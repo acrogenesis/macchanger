@@ -1,17 +1,17 @@
 # MacChanger for macOS
 
-A MAC address management tool for macOS that works with the latest macOS versions including Sequoia 15+.
+A MAC address management tool for macOS that works with the latest macOS versions including ARM.
 
-## Version 1.6.0
+## Version 1.6.1
 
-**GREAT NEWS**: Manual MAC address changing now works perfectly on macOS Sequoia 15+ using the proper method!
+**GREAT NEWS**: Manual MAC address changing now works perfectly on macOS ARM using the proper method!
 
 ## Features
 
 - **Show current MAC address**: `macchanger -s en0`
 - **Set specific MAC address**: `macchanger -m aa:bb:cc:dd:ee:ff en0`
 - **Generate random MAC address**: `macchanger -r en0`
-- **Cross-version compatibility**: Works on both legacy macOS and Sequoia 15+
+- **Cross-version compatibility**: Works on both intel and ARM
 - **Automatic Wi-Fi handling**: Properly manages Wi-Fi state during MAC changes
 
 ## Usage

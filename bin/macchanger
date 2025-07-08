@@ -2,7 +2,7 @@
 
 require 'optparse'
 options = {}
-VERSION = '1.6.0'
+VERSION = '1.6.1'
 
 optparse = OptionParser.new do |opts|
   opts.banner = 'Usage: macchanger [options] device'
@@ -61,15 +61,14 @@ class MacChanger
     end
   end
 
-  def self.get_macos_version
-    version_output = `sw_vers -productVersion`.strip
-    major, minor = version_output.split('.').map(&:to_i)
-    return major, minor
+  def self.get_cpu_architecture
+    arch_output = `uname -m`.strip
+    return arch_output
   end
 
-  def self.sequoia_or_later?
-    major, minor = get_macos_version
-    return major >= 15 || (major == 14 && minor >= 4)
+  def self.arm_mac?
+    arch = get_cpu_architecture
+    return arch == "arm64"
   end
 
   def self.get_interface_type(device)
@@ -86,7 +85,7 @@ class MacChanger
 
 
 
-  def self.change_mac_sequoia_method(device, mac)
+  def self.change_mac_arm_method(device, mac)
     interface_type = get_interface_type(device)
 
     if interface_type == "Wi-Fi"
@@ -136,7 +135,7 @@ class MacChanger
     end
   end
 
-  def self.change_mac_legacy_method(device, mac)
+  def self.change_mac_intel_method(device, mac)
     interface_type = get_interface_type(device)
     puts "INFO: Type of interface is #{interface_type}. Will disassociate from any network."
 
@@ -144,7 +143,7 @@ class MacChanger
       puts "WARNING: The airport command line tool is deprecated and will be removed in a future release."
       puts "For diagnosing Wi-Fi related issues, use the Wireless Diagnostics app or wdutil command line tool."
 
-      # Try the old airport method first
+      # Try the old airport method for Intel Macs
       system("sudo /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport #{device} -z")
       sleep 2
     end
@@ -171,11 +170,11 @@ class MacChanger
       options[:mac] = generate
     end
 
-    # Use different methods based on macOS version
-    if sequoia_or_later?
-      success = change_mac_sequoia_method(options[:device], options[:mac])
+    # Use different methods based on CPU architecture
+    if arm_mac?
+      success = change_mac_arm_method(options[:device], options[:mac])
     else
-      success = change_mac_legacy_method(options[:device], options[:mac])
+      success = change_mac_intel_method(options[:device], options[:mac])
     end
 
     unless success
