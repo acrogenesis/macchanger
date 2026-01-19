@@ -25,6 +25,7 @@ Usage: macchanger [options] device
         --enable-private             Enable private Wi-Fi addresses (macOS Sequoia+ feature)
         --disable-private            Disable private Wi-Fi addresses (use real MAC)
         --status                     Show private Wi-Fi address status for all networks
+```
 
 ## Installation
 
