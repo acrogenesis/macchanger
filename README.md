@@ -28,10 +28,26 @@ Usage: macchanger [options] device
 
 ## Installation
 
+### Homebrew (macOS 10.15+)
+
 1. Install brew (http://brew.sh/)
 2. `brew update`
 3. `brew install acrogenesis/macchanger/macchanger`
 
+### Manual (no Homebrew)
+
+Homebrew no longer supports macOS 10.14, so Mojave users should install from source:
+
+```bash
+git clone https://github.com/acrogenesis/macchanger.git
+cd macchanger
+sudo make install
+```
+
+To uninstall:
+
+```bash
+sudo make uninstall
 ```
 
 This sequence bypasses Apple's restrictions and successfully changes the MAC address.
